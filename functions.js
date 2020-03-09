@@ -7,6 +7,8 @@
  ****************************************************************/
 function getBookById(bookId, books) {
   // Your code goes here
+  const result = books.find(book => book.id === bookId);
+  return result;
 }
 
 /**************************************************************
@@ -18,6 +20,10 @@ function getBookById(bookId, books) {
  ****************************************************************/
 function getAuthorByName(authorName, authors) {
   // Your code goes here
+  const result = authors.find(
+    author => author.name.toLowerCase() == authorName.toLowerCase()
+  );
+  return result;
 }
 
 /**************************************************************
@@ -28,6 +34,11 @@ function getAuthorByName(authorName, authors) {
  ****************************************************************/
 function bookCountsByAuthor(authors) {
   // Your code goes here
+
+  return authors.map(author => ({
+    author: author.name,
+    bookCount: author.books.length
+  }));
 }
 
 /**************************************************************
@@ -39,8 +50,13 @@ function bookCountsByAuthor(authors) {
  ****************************************************************/
 function booksByColor(books) {
   const colors = {};
-
-  // Your code goes here
+  books.forEach(book => {
+    if (colors[book.color]) {
+      colors[book.color].push(book.title);
+    } else {
+      colors[book.color] = [book.title];
+    }
+  });
 
   return colors;
 }
@@ -55,6 +71,13 @@ function booksByColor(books) {
  ****************************************************************/
 function titlesByAuthorName(authorName, authors, books) {
   // Your code goes here
+  let author = getAuthorByName(authorName, authors);
+
+  if (!author) {
+    return [];
+  } else {
+    return author.books.map(bookId => getBookById(bookId, books).title);
+  }
 }
 
 /**************************************************************
@@ -66,6 +89,14 @@ function titlesByAuthorName(authorName, authors, books) {
  ****************************************************************/
 function mostProlificAuthor(authors) {
   // Your code goes here
+  let FirstAuthor = authors[0];
+
+  authors.forEach(author => {
+    if (author.books.length > FirstAuthor.books.length) {
+      FirstAuthor = author;
+    }
+  });
+  return FirstAuthor.name;
 }
 
 /**************************************************************
@@ -92,7 +123,34 @@ function mostProlificAuthor(authors) {
  * BONUS: REMOVE DUPLICATE BOOKS
  ****************************************************************/
 function relatedBooks(bookId, authors, books) {
-  // Your code goes here
+  const book = getBookById(bookId, books);
+  let titles = [];
+
+  book.authors.forEach(
+    author =>
+      (titles = titles.concat(titlesByAuthorName(author.name, authors, books)))
+
+    /* BONUS */
+
+    // titles = titles.concat(titlesByAuthorName(author.name, authors, books).filter(book => !titles.includes(book)))
+  );
+
+  /* Alternate BONUS */
+  // titles = [...new Set(titles)];
+
+  return titles;
+
+  /* "One-liner" using reduce */
+  // return getBookById(bookId, books).authors.reduce(
+  //   (titles, author) => [
+  //     ...new Set([
+  //       ...titles,
+  //       ...titlesByAuthorName(author.name, authors, books)
+  //     ])
+  //     ...new Set(titles.concat(titlesByAuthorName(author.name, authors, books)))
+  //   ],
+  //   []
+  // );
 }
 
 /**************************************************************
@@ -101,8 +159,46 @@ function relatedBooks(bookId, authors, books) {
  * - returns the name of the author that has
  *   co-authored the greatest number of books
  ****************************************************************/
+
 function friendliestAuthor(authors) {
-  // Your code goes here
+  authors.forEach(author => {
+    author.coauthoringCount = 0;
+    authors.forEach(secondAuthor => {
+      if (secondAuthor.name !== author.name) {
+        const sharedBooks = secondAuthor.books.filter(bookId =>
+          author.books.includes(bookId)
+        );
+        author.coauthoringCount += sharedBooks.length;
+      }
+    });
+
+    /* Alternative with reduce */
+    // author.coauthoringCount = authors.reduce(
+    //   (coauthoringCount, secondAuthor) => {
+    //     if (secondAuthor.name !== author.name)
+    //       coauthoringCount += secondAuthor.books.filter(bookId =>
+    //         author.books.includes(bookId)
+    //       ).length;
+    //     return coauthoringCount;
+    //   },
+    //   0
+    // );
+  });
+
+  let friendlyAuthor = authors[0];
+
+  authors.forEach(author => {
+    if (author.coauthoringCount > friendlyAuthor.coauthoringCount) {
+      friendlyAuthor = author;
+    }
+  });
+
+  return friendlyAuthor.name;
+
+  /* Alternative with sort */
+  // return authors.sort(
+  //   (authorA, authorB) => authorB.coauthoringCount - authorA.coauthoringCount
+  // )[0].name;
 }
 
 module.exports = {
